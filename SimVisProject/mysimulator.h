@@ -96,11 +96,8 @@ public slots:
 
 signals:
     void nextStepChanged(bool nextStep);
-
     void frameMinChanged(int frameMin);
-
     void frameMaxChanged(int frameMax);
-
     void newStepChanged(int newStep);
 
 protected:

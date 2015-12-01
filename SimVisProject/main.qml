@@ -2,7 +2,6 @@ import QtQuick 2.5
 import QtQuick.Window 2.2
 import QtQuick.Controls 1.1
 import MySimulator 1.0
-//import MyWorker 1.0
 import SimVis 1.0
 
 Window {
@@ -85,13 +84,14 @@ Window {
         anchors.left: timestepButton.right
         anchors.right: parent.right
         value: 0
-        minimumValue: simulator.frameMin
-        maximumValue: simulator.frameMax
+        minimumValue: 19000 //simulator.frameMin
+        maximumValue: 21000 //simulator.frameMax
         stepSize: 100
         onValueChanged: {
             simulator.newStep = value
             simulator.nextStep = true
         }
+        objectName: "slider"
     }
 
     Button {

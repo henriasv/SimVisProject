@@ -5,6 +5,7 @@
 #include <../voronoi-md-analysis/triangle.h>
 #include <vector>
 #include <QVector3D>
+#include <QObject>
 
 MySimulator::MySimulator()
 {
@@ -99,18 +100,10 @@ void MyWorker::work()
 }
 
 MyWorker::MyWorker() {
-    timestep = 0;
     std::string  filepath("/Users/henriksveinsson/molecular-simulations/lmp_Nthermalize=10000.0_Nerate=10000.0_temperature=260.0_crackRadius=20.0_Nproduction=40000.0_timeStep=10.0_Nx=24_Ny=24_Nz=12_crackHeight=6.0_maxStrain=1.1_seed=000/trajectory.lammpstrj");
     tracer.init(filepath);
-    tracer.setParams(0.4, 0.4, 0.2, 100, 0.5);
+    tracer.setParams(0.9, 0.9, 0.3, 100, 0.5);
     std::vector<Triangle> triangles = tracer.triangles(timestep);
-    for (auto triangle : triangles)
-    {
-        for (int i = 0; i<3; i++)
-        {
-            vertices.push_back(QVector3D(triangle.vertices[i].x(), triangle.vertices[i].y(), triangle.vertices[i].z()));
-        }
-    }
     std::vector<int> frames = tracer.lammpsIO->availableFrames();
     m_framemin = *std::min_element(frames.begin(), frames.end());
     m_framemax = *std::max_element(frames.begin(), frames.end());
