@@ -18,11 +18,7 @@ Window {
         anchors.fill: parent
         simulator: simulator
         camera: camera
-        backgroundColor: "gray"
-
-
-
-
+        backgroundColor: "lightgray"
 
         Spheres {
             id: spheres
@@ -107,26 +103,36 @@ Window {
         updateValueWhileDragging: false
     }
 
+
+
     Button {
         id: timestepButton
         anchors.left: parent.left
         text: timeSlider.value
     }
 
-    TextField {
-        id: rSqThresholdField
-        placeholderText: "rsq_threshold"
+    Slider {
+        id: rSqThresholdSlider
         anchors.top: timestepButton.bottom
-        onEditingFinished: {
-            simulator.rSqThreshold = text
+        anchors.left: parent.left
+        minimumValue: 50
+        maximumValue: 500
+        onValueChanged: {
+            simulator.rSqThreshold = value
             simulator.nextStep = true
         }
     }
+    Button {
+        id: rSqThresholdButton
+        anchors.top: timstepButton.bottom
+        anchors.left: rSqThresholdSlider.right
+        text: rSqThresholdButton.value.toFixed(2)
+    }
 
     Slider {
-        id: skewFactorField
-        //placeholderText: "skewfactor"
-        anchors.top: rSqThresholdField.bottom
+        id: skewFactorSlider
+        anchors.top: rSqThresholdSlider.bottom
+        anchors.left: parent.left
         minimumValue: 0.0
         maximumValue: 1.0
         value: 0.2
@@ -138,14 +144,14 @@ Window {
     }
     Button {
         id: skewFactorButton
-        anchors.left: skewFactorField.right
-        anchors.top: timeSlider.bottom
-        text: skewFactorField.value
+        anchors.left: skewFactorSlider.right
+        anchors.top: rSqThresholdSlider.bottom
+        text: skewFactorSlider.value.toFixed(2)
     }
 
     Slider {
         id: xfacField
-        anchors.top: skewFactorField.bottom
+        anchors.top: skewFactorSlider.bottom
         value: 0.3
         stepSize: 0.1
         onValueChanged: {
