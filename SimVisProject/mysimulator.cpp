@@ -60,7 +60,7 @@ void MyWorker::synchronizeSimulator(Simulator *simulator)
 void MyWorker::synchronizeRenderer(Renderable *renderableObject)
 {
     TriangleCollection* triangleCollection = qobject_cast<TriangleCollection*>(renderableObject);
-    QVector3D displacement(140, 140, 75);
+    QVector3D displacement(75, 75, 75);
     if(triangleCollection) {
         //std::cout << "Synchronizing vertices" << std::endl;
         triangleCollection->data.resize(vertices.size());
@@ -148,7 +148,7 @@ void MyWorker::work()
 }
 
 MyWorker::MyWorker() {
-    std::string  filepath("/Users/henriksveinsson/molecular-simulations/lmp_Nthermalize=10000.0_Nerate=10000.0_temperature=260.0_crackRadius=20.0_Nproduction=40000.0_timeStep=10.0_Nx=24_Ny=24_Nz=12_crackHeight=6.0_maxStrain=1.1_seed=000/trajectory.lammpstrj");
+    std::string  filepath("/media/henrik/IcyBox/phd_methane_hydrates/pennyshaped_cracks/systematic_mw_pennycracks-2016-01-05-194103/lmp_Nthermalize=2000.0_Nerate=10000.0_temperature=260.0_crackRadius=20.0_Nproduction=40000.0_timeStep=10.0_Nx=12_Ny=12_Nz=12_crackHeight=6.0_maxStrain=1.072_seed=000/trajectory.lammpstrj");
     tracer.init(filepath);
     tracer.setParams(0.3, 0.3, 0.3, 80, 0.5);
     std::vector<int> frames = tracer.lammpsIO->availableFrames();
