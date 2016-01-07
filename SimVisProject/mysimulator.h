@@ -4,8 +4,7 @@
 #include <QVector>
 #include <QVector3D>
 #include <SimVis/Simulator>
-#include <../voronoi-md-analysis/LammpsIO/lammpsio.h>
-#include <../voronoi-md-analysis/voronoifracturetracer.h>
+#include <../LammpsIO/lammpsio.h>
 
 
 class MyWorker : public SimulatorWorker
@@ -15,8 +14,7 @@ public:
     MyWorker();
     QVector<QVector3D> vertices;
     std::vector<double> intensities;
-    std::vector<Sphere> spheres;
-    VoronoiFractureTracer tracer;
+    LammpsIO* lammpsIO;
     int timestep;
 
 private:

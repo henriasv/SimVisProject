@@ -1,3 +1,6 @@
 [submodule "SimVis"]
 	path = SimVis
 	url = git@github.com:ComputationalPhysics/SimVis.git
+[submodule "LammpsIO"]
+	path = LammpsIO
+	url = git@github.com:henriasv/LammpsIO.git
