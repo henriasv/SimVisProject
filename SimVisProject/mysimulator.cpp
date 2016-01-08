@@ -6,6 +6,7 @@
 #include <QVector3D>
 #include <QObject>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Simple_cartesian.h>
 #include <CGAL/Delaunay_triangulation_3.h>
 #include <CGAL/Alpha_shape_3.h>
 #include <list>
@@ -156,12 +157,13 @@ MyWorker::MyWorker() {
 
 
     LammpsFrame frame;
-    lammpsIO->readFrame(frame, 25000);
+    lammpsIO->readFrame(frame, 30000);
     std::vector<vec3> positions = frame.getPositionsType(lammpsIO->elementCharToType('O'));
 
 
 
     typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+    //typedef CGAL::Simple_cartesian<double> K;
     typedef CGAL::Alpha_shape_vertex_base_3<K>               Vb;
     typedef CGAL::Alpha_shape_cell_base_3<K>                 Fb;
     typedef CGAL::Triangulation_data_structure_3<Vb,Fb>      Tds;
@@ -182,18 +184,51 @@ MyWorker::MyWorker() {
       std::cout << "Delaunay computed." << std::endl;
       // compute alpha shape
       Alpha_shape_3 as(dt);
+      as.set_alpha(20.0);
       std::cout << "Alpha shape computed in REGULARIZED mode by defaut."
             << std::endl;
        // find optimal alpha values
-      Alpha_shape_3::NT alpha_solid = as.find_alpha_solid();
-      Alpha_iterator opt = as.find_optimal_alpha(1);
+      NT alpha_solid = as.find_alpha_solid();
+      Alpha_iterator opt = as.find_optimal_alpha(3);
       std::cout << "Smallest alpha value to get a solid through data points is "
             << alpha_solid << std::endl;
       std::cout << "Optimal alpha value to get one connected component is "
             <<  *opt    << std::endl;
-      as.set_alpha(*opt);
-      assert(as.number_of_solid_components() == 1);
 
+      std::list<Alpha_shape_3::Facet> facets;
+
+      as.get_alpha_shape_facets(std::back_inserter(facets), Alpha_shape_3::REGULAR);
+      as.get_alpha_shape_facets(std::back_inserter(facets), Alpha_shape_3::SINGULAR);
+      std::cout << facets.size() << std::endl;
+      //auto myFacet =  *(++(++(facets.begin())));
+      //std::cout << std::get<1>(myFacet) << std::endl;
+      //as.set_alpha(*opt);
+      //auto myCell = *std::get<0>(myFacet);
+//      for (int i = 0; i<4; i++)
+//      {
+//        auto myVertex =  *myCell.vertex(i);
+//        //std::cout << position[0] << std::endl;
+//        Point myPoint = myVertex.point();
+//        double myPos = myPoint[0];
+//        std::cout << myPos << std::endl;
+//      }
+
+      for (auto p : facets)
+      {
+          auto myFacet = p;
+          auto myCell = *std::get<0>(myFacet);
+          int facetInd = std::get<1>(myFacet);
+
+          for (int i = 0; i<4; i++)
+          {
+              if (i != facetInd)
+              {
+                auto myVertex = *myCell.vertex(i);
+                Point myPoint = myVertex.point();
+                vertices.append(QVector3D(myPoint.x(), myPoint.y(), myPoint.z()));
+              }
+          }
+      }
 
     m_nextstep = false;
 }
