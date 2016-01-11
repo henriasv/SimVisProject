@@ -89,18 +89,19 @@ Window {
 
     Slider {
         id: timeSlider
-        anchors.left: timestepButton.right
+        anchors.left: parent.left
         anchors.right: parent.right
+        anchors.bottom: parent.bottom
         value: 19000
-        minimumValue: 20000 //simulator.frameMin
-        maximumValue: 21000 //simulator.frameMax
-        stepSize: 200
+        minimumValue: 19000 //simulator.frameMin
+        maximumValue: 22000 //simulator.frameMax
+        stepSize: 100
         onValueChanged: {
             simulator.newStep = value
             simulator.nextStep = true
         }
         objectName: "slider"
-        updateValueWhileDragging: false
+        updateValueWhileDragging: true
     }
 
 
@@ -112,46 +113,8 @@ Window {
     }
 
     Slider {
-        id: rSqThresholdSlider
-        anchors.top: timestepButton.bottom
-        anchors.left: parent.left
-        minimumValue: 50
-        maximumValue: 500
-        onValueChanged: {
-            simulator.rSqThreshold = value
-            simulator.nextStep = true
-        }
-    }
-    Button {
-        id: rSqThresholdButton
-        anchors.top: timstepButton.bottom
-        anchors.left: rSqThresholdSlider.right
-        text: rSqThresholdButton.value.toFixed(2)
-    }
-
-    Slider {
-        id: skewFactorSlider
-        anchors.top: rSqThresholdSlider.bottom
-        anchors.left: parent.left
-        minimumValue: 0.0
-        maximumValue: 1.0
-        value: 0.2
-        onValueChanged: {
-            simulator.skewFactor = value
-            simulator.nextStep = true
-        }
-        updateValueWhileDragging: true
-    }
-    Button {
-        id: skewFactorButton
-        anchors.left: skewFactorSlider.right
-        anchors.top: rSqThresholdSlider.bottom
-        text: skewFactorSlider.value.toFixed(2)
-    }
-
-    Slider {
         id: xfacField
-        anchors.top: skewFactorSlider.bottom
+        anchors.top: timestepButton.bottom
         value: 0.3
         stepSize: 0.1
         onValueChanged: {
@@ -209,6 +172,7 @@ Window {
             simulator.isPlotSpheres = checked
             simulator.nextStep = true
         }
+        text: "Spheres"
     }
 
     CheckBox {
@@ -219,6 +183,7 @@ Window {
             simulator.isPlotTriangles = checked
             simulator.nextStep = true
         }
+        text: "Triangles"
     }
 
     Camera {

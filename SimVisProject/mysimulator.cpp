@@ -5,10 +5,6 @@
 #include <vector>
 #include <QVector3D>
 #include <QObject>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Simple_cartesian.h>
-#include <CGAL/Delaunay_triangulation_3.h>
-#include <CGAL/Alpha_shape_3.h>
 #include <list>
 
 
@@ -55,15 +51,17 @@ void MyWorker::synchronizeSimulator(Simulator *simulator)
         mySimulator->setIsPreload(false);
         m_isplotspheres = mySimulator->isPlotSpheres();
         m_isplottriangles = mySimulator->isPlotTriangles();
+        m_xfac = mySimulator->xfac();
+        m_yfac = mySimulator->yfac();
+        m_zfac = mySimulator->zfac();
     }
 }
 
 void MyWorker::synchronizeRenderer(Renderable *renderableObject)
 {
     TriangleCollection* triangleCollection = qobject_cast<TriangleCollection*>(renderableObject);
-    QVector3D displacement(75, 75, 75);
+    QVector3D displacement(140, 140, 75);
     if(triangleCollection) {
-        //std::cout << "Synchronizing vertices" << std::endl;
         triangleCollection->data.resize(vertices.size());
         triangleCollection->dirty = true;
         for(int i=0; i<vertices.size()/3; i++) {
@@ -72,7 +70,7 @@ void MyWorker::synchronizeRenderer(Renderable *renderableObject)
             QVector3D &p3 = vertices[3*i+2];
             QVector3D normal = QVector3D::crossProduct((p1-p2), (p1-p3)).normalized();
             QColor colorTmp;
-            //colorTmp.setRedF(intensities[i]);
+            //colorTmp.setRe    dF(intensities[i]);
             //colorTmp.setGreenF(intensities[i]);
             //colorTmp.setBlueF(intensities[i]);
             //QVector3D color(colorTmp.redF(), colorTmp.greenF(), colorTmp.blueF());
@@ -86,7 +84,7 @@ void MyWorker::synchronizeRenderer(Renderable *renderableObject)
 
     }
 
-    Spheres *qspheres = qobject_cast<Spheres*>(renderableObject);
+//  Spheres *qspheres = qobject_cast<Spheres*>(renderableObject);
 //    if(qspheres) {
 //        qspheres->positions().resize(spheres.size());
 //        qspheres->colors().resize(spheres.size());
@@ -108,128 +106,55 @@ void MyWorker::work()
 //        tracer.preload(m_framemin, m_framemax, m_framestep);
 //    }
 
-//    if (m_nextstep)
-//    {
-//        vertices.clear();
-//        spheres.clear();
-//        timestep = m_newstep;
-//        if (timestep < 0)
-//        {
-//            std::cout << "Negative timestep, setting to 0" << std::endl;
-//            timestep = 0;
-//        }
+    if (m_nextstep)
+    {
+        vertices.clear();
+        //spheres.clear();
+        timestep = m_newstep;
+        if (timestep < 0)
+        {
+            std::cout << "Negative timestep, setting to 0" << std::endl;
+            timestep = 0;
+        }
 
-//        if (m_isplottriangles)
-//        {
-//        std::vector<Triangle> triangles = tracer.triangles(timestep);
-//        for (auto triangle : triangles)
-//        {
-//            if ((triangle.max_rsq>m_rsq_threshold) && (triangle.min_skew>m_skewfactor))
-//            {
-//                for (int i = 0; i<3; i++)
-//                {
-//                    vertices.push_back(QVector3D(triangle.vertices[i].x(), triangle.vertices[i].y(), triangle.vertices[i].z()));
-//                }
-//            }
-//        }
-//        }
-//        if (m_isplotspheres)
-//        {
-//        std::vector<Sphere> tmpSpheres = tracer.spheres(timestep);
-//        for (auto sphere : tmpSpheres)
-//        {
-//            if ((sphere.max_rsq>m_rsq_threshold) && (true))// (sphere.min_skew>m_skewfactor))
-//            {
-//                spheres.push_back(sphere);
-//            }
-//        }
-//        }
-//        m_nextstep = false;
-//    }
+        if (m_isplottriangles)
+        {
+            if (stepData.count(timestep)>0)
+            {
+                AnalysisStep currentStep = stepData[timestep];
+                for (Triangle & triangle : currentStep.triangleData)
+                {
+                    vertices.push_back(triangle.vertices[0]);
+                    vertices.push_back(triangle.vertices[1]);
+                    vertices.push_back(triangle.vertices[2]);
+                }
+            }
+            else
+            {
+                AnalysisStep currentStep(*lammpsIO, timestep, m_xfac, m_yfac, m_zfac, 'O');
+                stepData[timestep] = currentStep;
+                for (Triangle & triangle : stepData[timestep].triangleData)
+                {
+                    vertices.push_back(triangle.vertices[0]);
+                    vertices.push_back(triangle.vertices[1]);
+                    vertices.push_back(triangle.vertices[2]);
+                }
+            }
+
+        }
+        std::cout << "Surface Area " << std::setprecision(6) <<  stepData[timestep].surfaceArea() << std::endl;
+        m_nextstep = false;
+    }
 }
 
 MyWorker::MyWorker() {
-    std::string  filepath("/media/henrik/IcyBox/phd_methane_hydrates/pennyshaped_cracks/systematic_mw_pennycracks-2016-01-05-194103/lmp_Nthermalize=2000.0_Nerate=10000.0_temperature=260.0_crackRadius=20.0_Nproduction=40000.0_timeStep=10.0_Nx=12_Ny=12_Nz=12_crackHeight=6.0_maxStrain=1.072_seed=000/trajectory.lammpstrj");
+    std::string  filepath("/Users/henriksveinsson/molecular-simulations/lmp_Nthermalize=10000.0_Nerate=10000.0_temperature=260.0_crackRadius=20.0_Nproduction=40000.0_timeStep=10.0_Nx=24_Ny=24_Nz=12_crackHeight=6.0_maxStrain=1.1_seed=000/trajectory.lammpstrj");
     lammpsIO = new LammpsIO(filepath);
     std::vector<int> frames = lammpsIO->availableFrames();
     m_framemin = *std::min_element(frames.begin(), frames.end());
     m_framemax = *std::max_element(frames.begin(), frames.end());
 
-
-    LammpsFrame frame;
-    lammpsIO->readFrame(frame, 30000);
-    std::vector<vec3> positions = frame.getPositionsType(lammpsIO->elementCharToType('O'));
-
-
-
-    typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-    //typedef CGAL::Simple_cartesian<double> K;
-    typedef CGAL::Alpha_shape_vertex_base_3<K>               Vb;
-    typedef CGAL::Alpha_shape_cell_base_3<K>                 Fb;
-    typedef CGAL::Triangulation_data_structure_3<Vb,Fb>      Tds;
-    typedef CGAL::Delaunay_triangulation_3<K,Tds,CGAL::Fast_location>  Delaunay;
-    typedef CGAL::Alpha_shape_3<Delaunay>                    Alpha_shape_3;
-    typedef K::Point_3                                  Point;
-    typedef Alpha_shape_3::Alpha_iterator               Alpha_iterator;
-    typedef Alpha_shape_3::NT                           NT;
-
-      Delaunay dt;
-
-      for (auto position : positions)
-      {
-              dt.insert(Point(position.x(), position.y(), position.z()));
-      }
-
-
-      std::cout << "Delaunay computed." << std::endl;
-      // compute alpha shape
-      Alpha_shape_3 as(dt);
-      as.set_alpha(20.0);
-      std::cout << "Alpha shape computed in REGULARIZED mode by defaut."
-            << std::endl;
-       // find optimal alpha values
-      NT alpha_solid = as.find_alpha_solid();
-      Alpha_iterator opt = as.find_optimal_alpha(3);
-      std::cout << "Smallest alpha value to get a solid through data points is "
-            << alpha_solid << std::endl;
-      std::cout << "Optimal alpha value to get one connected component is "
-            <<  *opt    << std::endl;
-
-      std::list<Alpha_shape_3::Facet> facets;
-
-      as.get_alpha_shape_facets(std::back_inserter(facets), Alpha_shape_3::REGULAR);
-      as.get_alpha_shape_facets(std::back_inserter(facets), Alpha_shape_3::SINGULAR);
-      std::cout << facets.size() << std::endl;
-      //auto myFacet =  *(++(++(facets.begin())));
-      //std::cout << std::get<1>(myFacet) << std::endl;
-      //as.set_alpha(*opt);
-      //auto myCell = *std::get<0>(myFacet);
-//      for (int i = 0; i<4; i++)
-//      {
-//        auto myVertex =  *myCell.vertex(i);
-//        //std::cout << position[0] << std::endl;
-//        Point myPoint = myVertex.point();
-//        double myPos = myPoint[0];
-//        std::cout << myPos << std::endl;
-//      }
-
-      for (auto p : facets)
-      {
-          auto myFacet = p;
-          auto myCell = *std::get<0>(myFacet);
-          int facetInd = std::get<1>(myFacet);
-
-          for (int i = 0; i<4; i++)
-          {
-              if (i != facetInd)
-              {
-                auto myVertex = *myCell.vertex(i);
-                Point myPoint = myVertex.point();
-                vertices.append(QVector3D(myPoint.x(), myPoint.y(), myPoint.z()));
-              }
-          }
-      }
-
     m_nextstep = false;
 }
+
 

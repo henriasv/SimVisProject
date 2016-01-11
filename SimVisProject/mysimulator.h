@@ -6,6 +6,10 @@
 #include <SimVis/Simulator>
 #include <../LammpsIO/lammpsio.h>
 
+#include <analysisstep.h>
+#include <map>
+
+
 
 class MyWorker : public SimulatorWorker
 {
@@ -15,11 +19,12 @@ public:
     QVector<QVector3D> vertices;
     std::vector<double> intensities;
     LammpsIO* lammpsIO;
+    std::map<int, AnalysisStep> stepData;
     int timestep;
 
 private:
-    virtual void synchronizeSimulator(Simulator *simulator);
-    virtual void synchronizeRenderer(Renderable *renderableObject);
+    virtual void synchronizeSimulator(Simulator *simulator) override;
+    virtual void synchronizeRenderer(Renderable *renderableObject) override;
     virtual void work() override;
     bool m_nextstep = false;
     bool m_ispreload = false;
@@ -31,6 +36,9 @@ private:
     double m_rsq_threshold = 0;
     bool m_isplottriangles = true;
     bool m_isplotspheres = true;
+    double m_xfac = 1.0;
+    double m_yfac = 1.0;
+    double m_zfac = 1.0;
 };
 
 class MySimulator : public Simulator
