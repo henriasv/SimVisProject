@@ -16,6 +16,7 @@ public:
     QPointF operator[](int index) { return m_points[index+m_firstIndex]; }
     QPointF get(int index) { return m_points[index+m_firstIndex]; }
     int size() { return m_numberOfPoints; }
+    void clear();
 
 signals:
     void dataChanged();

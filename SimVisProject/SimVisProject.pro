@@ -11,7 +11,10 @@ SOURCES += main.cpp \
     ../LammpsIO/lammpsio.cpp \
     ../LammpsIO/vec3/vec3.cpp \
     triangle.cpp \
-    analysisstep.cpp
+    analysisstep.cpp \
+    figure.cpp \
+    graph.cpp \
+    linegraph.cpp
 
 RESOURCES += qml.qrc
 
@@ -28,7 +31,10 @@ HEADERS += \
     ../LammpsIO/lammpsio.h \
     ../LammpsIO/vec3/vec3.h \
     triangle.h \
-    analysisstep.h
+    analysisstep.h \
+    figure.h \
+    graph.h \
+    linegraph.h
 
 unix|win32: LIBS += -lCGAL -lgmp
 unix|win32: INCLUDEPATH += /usr/local/Cellar/cgal/4.6.3/include /usr/local/Cellar/boost/1.58.0/include /usr/local/Cellar/gmp/6.0.0a/include /usr/local/Cellar/mpfr/3.1.3/include

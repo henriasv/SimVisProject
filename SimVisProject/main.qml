@@ -1,8 +1,10 @@
 import QtQuick 2.5
 import QtQuick.Window 2.2
 import QtQuick.Controls 1.1
+import QtQuick.Dialogs 1.2
 import MySimulator 1.0
 import SimVis 1.0
+import QMLPlot 1.0
 
 Window {
     visible: true
@@ -86,6 +88,21 @@ Window {
             camera: camera
         }
     }
+
+    FileDialog {
+        id: fileDialog
+        title: "Please choose a file"
+        folder: shortcuts.home
+        onAccepted: {
+            console.log("You chose: " + fileDialog.fileUrls)
+            simulator.inputFileUrl = fileDialog.fileUrl
+        }
+        onRejected: {
+            console.log("Canceled")
+        }
+        Component.onCompleted: visible = true
+    }
+
 
     Slider {
         id: timeSlider
@@ -190,6 +207,30 @@ Window {
         id: camera
         farPlane: 1000000
         nearPlane: 0.1
+    }
+
+    Figure {
+        id: figure
+        width: 300
+        height: 300
+        //color: "red"
+        xMin: timeSlider.minimumValue
+        xMax: timeSlider.maximumValue
+        yMin: simulator.areaMin
+        yMax: simulator.areaMax
+        xLabel: "timestep "
+        yLabel: "area"
+        title: "Surface area"
+        LineGraph {
+            id: graph
+            dataSource: simulator.lineGraphDataSource
+            width: 1
+            style: Qt.DotLine
+        }
+        MouseArea {
+            anchors.fill: parent
+            drag.target: parent
+        }
     }
 }
 

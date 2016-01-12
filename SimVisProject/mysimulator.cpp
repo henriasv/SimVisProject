@@ -10,7 +10,7 @@
 
 MySimulator::MySimulator()
 {
-
+    m_lineGraphDataSource = new LineGraphDataSource();
 }
 
 
@@ -39,8 +39,6 @@ void MyWorker::synchronizeSimulator(Simulator *simulator)
     if(mySimulator) {
         m_nextstep = mySimulator->nextStep();
         m_newstep = mySimulator->newStep();
-        m_rsq_threshold = mySimulator->rSqThreshold();
-        m_skewfactor = mySimulator->skewFactor();
         m_framestep = mySimulator->frameStep();
         m_framemin = mySimulator->frameMin();
         m_framemax = mySimulator->frameMax();
@@ -54,6 +52,16 @@ void MyWorker::synchronizeSimulator(Simulator *simulator)
         m_xfac = mySimulator->xfac();
         m_yfac = mySimulator->yfac();
         m_zfac = mySimulator->zfac();
+        m_inputfileurl = mySimulator->inputFileUrl();
+
+        mySimulator->lineGraphDataSource()->clear();
+        mySimulator->setAreaMin(0.0);
+        mySimulator->setAreaMax(200000.0);
+        for (auto & step : stepData)
+        {
+            mySimulator->lineGraphDataSource()->addPoint(static_cast<double>(step.first), step.second.surfaceArea());
+        }
+
     }
 }
 
@@ -61,7 +69,7 @@ void MyWorker::synchronizeRenderer(Renderable *renderableObject)
 {
     TriangleCollection* triangleCollection = qobject_cast<TriangleCollection*>(renderableObject);
     QVector3D displacement(140, 140, 75);
-    if(triangleCollection) {
+    if(triangleCollection && m_hasvertices) {
         triangleCollection->data.resize(vertices.size());
         triangleCollection->dirty = true;
         for(int i=0; i<vertices.size()/3; i++) {
@@ -74,7 +82,7 @@ void MyWorker::synchronizeRenderer(Renderable *renderableObject)
             //colorTmp.setGreenF(intensities[i]);
             //colorTmp.setBlueF(intensities[i]);
             //QVector3D color(colorTmp.redF(), colorTmp.greenF(), colorTmp.blueF());
-            QVector3D color(0.5, 0.5, 0.5);
+            QVector3D color(1.0, 0.5, 0.5);
             for(int j=0; j<3; j++) {
                 triangleCollection->data[3*i+j].vertex = vertices[3*i+j]-displacement;
                 triangleCollection->data[3*i+j].color = color;
@@ -101,59 +109,82 @@ void MyWorker::synchronizeRenderer(Renderable *renderableObject)
 
 void MyWorker::work()
 {
-//    if (m_ispreload)
-//    {
-//        tracer.preload(m_framemin, m_framemax, m_framestep);
-//    }
-
-    if (m_nextstep)
+    if (!lammpsIO)
     {
-        vertices.clear();
-        //spheres.clear();
-        timestep = m_newstep;
-        if (timestep < 0)
+        //qDebug() << QString("LammpsIO not initialized");
+        //qDebug() << QString(m_inputfileurl.toLocalFile());
+        if (!m_inputfileurl.isEmpty())
         {
-            std::cout << "Negative timestep, setting to 0" << std::endl;
-            timestep = 0;
+            qDebug() << QString("Reading input file from valid url");
+            lammpsIO = new LammpsIO(m_inputfileurl.toLocalFile().toStdString());
+            std::vector<int> frames = lammpsIO->availableFrames();
+            m_framemin = *std::min_element(frames.begin(), frames.end());
+            m_framemax = *std::max_element(frames.begin(), frames.end());
+        }
+    }
+
+
+    if (lammpsIO)
+    {
+        if (m_ispreload)
+        {
+            for (int i = m_framemin; i<= m_framemax; i+=m_framestep)
+            {
+                readStep(i);
+            }
         }
 
-        if (m_isplottriangles)
+        if (m_nextstep)
         {
-            if (stepData.count(timestep)>0)
-            {
-                AnalysisStep currentStep = stepData[timestep];
-                for (Triangle & triangle : currentStep.triangleData)
-                {
-                    vertices.push_back(triangle.vertices[0]);
-                    vertices.push_back(triangle.vertices[1]);
-                    vertices.push_back(triangle.vertices[2]);
-                }
-            }
-            else
-            {
-                AnalysisStep currentStep(*lammpsIO, timestep, m_xfac, m_yfac, m_zfac, 'O');
-                stepData[timestep] = currentStep;
-                for (Triangle & triangle : stepData[timestep].triangleData)
-                {
-                    vertices.push_back(triangle.vertices[0]);
-                    vertices.push_back(triangle.vertices[1]);
-                    vertices.push_back(triangle.vertices[2]);
-                }
-            }
-
+            readStep(m_newstep);
         }
-        std::cout << "Surface Area " << std::setprecision(6) <<  stepData[timestep].surfaceArea() << std::endl;
-        m_nextstep = false;
     }
 }
 
-MyWorker::MyWorker() {
-    std::string  filepath("/Users/henriksveinsson/molecular-simulations/lmp_Nthermalize=10000.0_Nerate=10000.0_temperature=260.0_crackRadius=20.0_Nproduction=40000.0_timeStep=10.0_Nx=24_Ny=24_Nz=12_crackHeight=6.0_maxStrain=1.1_seed=000/trajectory.lammpstrj");
-    lammpsIO = new LammpsIO(filepath);
-    std::vector<int> frames = lammpsIO->availableFrames();
-    m_framemin = *std::min_element(frames.begin(), frames.end());
-    m_framemax = *std::max_element(frames.begin(), frames.end());
+void MyWorker::readStep(int timestep)
+{
+    vertices.clear();
+    //spheres.clear();
+    if (timestep < 0)
+    {
+        std::cout << "Negative timestep, setting to 0" << std::endl;
+        timestep = 0;
+    }
 
+    if (m_isplottriangles)
+    {
+        if (stepData.count(timestep)>0)
+        {
+            AnalysisStep currentStep = stepData[timestep];
+            for (Triangle & triangle : currentStep.triangleData)
+            {
+                vertices.push_back(triangle.vertices[0]);
+                vertices.push_back(triangle.vertices[1]);
+                vertices.push_back(triangle.vertices[2]);
+            }
+        }
+        else
+        {
+            AnalysisStep currentStep(*lammpsIO, timestep, m_xfac, m_yfac, m_zfac, 'O');
+            stepData[timestep] = currentStep;
+            for (Triangle & triangle : stepData[timestep].triangleData)
+            {
+                vertices.push_back(triangle.vertices[0]);
+                vertices.push_back(triangle.vertices[1]);
+                vertices.push_back(triangle.vertices[2]);
+            }
+        }
+        m_hasvertices = true;
+        double surfaceArea = stepData[timestep].surfaceArea();
+        qDebug() << QString("Surface Area ") << surfaceArea;
+        //std::cout << std::setprecision(6) <<  surfaceArea << std::endl;
+
+    }
+    m_nextstep = false;
+}
+
+MyWorker::MyWorker() {
+    //std::string  filepath("/Users/henriksveinsson/molecular-simulations/lmp_Nthermalize=10000.0_Nerate=10000.0_temperature=260.0_crackRadius=20.0_Nproduction=40000.0_timeStep=10.0_Nx=24_Ny=24_Nz=12_crackHeight=6.0_maxStrain=1.1_seed=000/trajectory.lammpstrj");
     m_nextstep = false;
 }
 

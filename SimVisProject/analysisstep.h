@@ -4,6 +4,7 @@
 #include <vector>
 #include <QVector3D>
 #include <triangle.h>
+#include <QDebug>
 #include <../LammpsIO/lammpsio.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 //#include <CGAL/Simple_cartesian.h>
@@ -31,6 +32,7 @@ public:
     QVector3D boundingBoxHi;
     QVector3D analysisBoxLo;
     QVector3D analysisBoxHi;
+    double m_surfaceArea = 0;
 
     void addTriangle(Triangle triangle);
     void addTriangle(QVector3D, QVector3D, QVector3D);

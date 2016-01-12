@@ -1,11 +1,18 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QtQml>
+#include "figure.h"
+#include "linegraph.h"
+
 
 #include "mysimulator.h"
 int main(int argc, char *argv[])
 {
     qmlRegisterType<MySimulator>("MySimulator", 1, 0, "MySimulator");
+    qmlRegisterType<Figure>("QMLPlot", 1,0,"Figure");
+    qmlRegisterType<LineGraph>("QMLPlot", 1,0,"LineGraph");
+    qmlRegisterType<LineGraphDataSource>("QMLPlot", 1,0,"LineGraphDataSource");
+
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;

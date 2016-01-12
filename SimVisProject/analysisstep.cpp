@@ -67,7 +67,7 @@ AnalysisStep::AnalysisStep(LammpsIO & reader, int timestep, double xfac, double 
           }
           else
           {
-              std::cout << "Invalid triangle was not inserted" << std::endl;
+              qDebug() << QString("Invalid triangle was not inserted");
           }
       }
     }
@@ -99,7 +99,14 @@ double AnalysisStep::surfaceArea()
     double area = 0;
     for (Triangle & triangle : triangleData)
     {
-        area += triangle.area();
+        if (triangle.valid())
+        {
+            area += triangle.area();
+        }
+        else
+        {
+            qDebug() << QString("Invalid triangle in area calculation");
+        }
     }
     return area;
 }

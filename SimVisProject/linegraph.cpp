@@ -140,3 +140,10 @@ void LineGraphDataSource::addPoint(float x, float y)
 
     emit dataChanged();
 }
+
+void LineGraphDataSource::clear()
+{
+    m_points.clear();
+    m_firstIndex = 0;
+    m_numberOfPoints = 0;
+}

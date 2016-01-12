@@ -33,6 +33,7 @@ double Triangle::area()
     {
         std::cout << "Area is NaN" << std::endl;
     }
+    return area;
 }
 
 bool Triangle::valid()

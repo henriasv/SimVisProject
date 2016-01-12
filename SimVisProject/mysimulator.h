@@ -4,7 +4,8 @@
 #include <QVector>
 #include <QVector3D>
 #include <SimVis/Simulator>
-#include <../LammpsIO/lammpsio.h>
+#include "../LammpsIO/lammpsio.h"
+#include "linegraph.h"
 
 #include <analysisstep.h>
 #include <map>
@@ -18,7 +19,7 @@ public:
     MyWorker();
     QVector<QVector3D> vertices;
     std::vector<double> intensities;
-    LammpsIO* lammpsIO;
+    LammpsIO* lammpsIO = nullptr;
     std::map<int, AnalysisStep> stepData;
     int timestep;
 
@@ -26,6 +27,7 @@ private:
     virtual void synchronizeSimulator(Simulator *simulator) override;
     virtual void synchronizeRenderer(Renderable *renderableObject) override;
     virtual void work() override;
+    void readStep(int timestep);
     bool m_nextstep = false;
     bool m_ispreload = false;
     int m_framestep = 0;
@@ -39,6 +41,8 @@ private:
     double m_xfac = 1.0;
     double m_yfac = 1.0;
     double m_zfac = 1.0;
+    bool m_hasvertices = false;
+    QUrl m_inputfileurl;
 };
 
 class MySimulator : public Simulator
@@ -57,6 +61,10 @@ class MySimulator : public Simulator
     Q_PROPERTY(bool isPreload READ isPreload WRITE setIsPreload NOTIFY isPreloadChanged)
     Q_PROPERTY(bool isPlotSpheres READ isPlotSpheres WRITE setIsPlotSpheres NOTIFY isPlotSpheresChanged)
     Q_PROPERTY(bool isPlotTriangles READ isPlotTriangles WRITE setIsPlotTriangles NOTIFY isPlotTrianglesChanged)
+    Q_PROPERTY(QUrl inputFileUrl READ inputFileUrl WRITE setInputFileUrl NOTIFY inputFileUrlChanged)
+    Q_PROPERTY(LineGraphDataSource* lineGraphDataSource READ lineGraphDataSource WRITE setLineGraphDataSource NOTIFY lineGraphDataSourceChanged)
+    Q_PROPERTY(double areaMin READ areaMin WRITE setAreaMin NOTIFY areaMinChanged)
+    Q_PROPERTY(double areaMax READ areaMax WRITE setAreaMax NOTIFY areaMaxChanged)
 
     bool m_nextStep = false;
     int m_frameMin = 0;
@@ -71,6 +79,11 @@ class MySimulator : public Simulator
     int m_frameStep;
     bool m_isPlotSpheres = true;
     bool m_isPlotTriangles = true;
+    QUrl m_inputFileUrl;
+
+    LineGraphDataSource* m_lineGraphDataSource = nullptr;
+    double m_areaMin = 0;
+    double m_areaMax = 0;
 
 public:
     MySimulator();
@@ -137,6 +150,27 @@ public:
     {
         return m_isPlotTriangles;
     }
+
+    QUrl inputFileUrl() const
+    {
+        return m_inputFileUrl;
+    }
+
+    LineGraphDataSource* lineGraphDataSource() const
+    {
+        return m_lineGraphDataSource;
+    }
+
+    double areaMin() const
+    {
+        return m_areaMin;
+    }
+
+    double areaMax() const
+    {
+        return m_areaMax;
+    }
+
 
 public slots:
     void setNextStep(bool nextStep);
@@ -249,6 +283,43 @@ public slots:
         emit isPlotTrianglesChanged(isPlotTriangles);
     }
 
+    void setInputFileUrl(QUrl inputFileUrl)
+    {
+        if (m_inputFileUrl == inputFileUrl)
+            return;
+
+        m_inputFileUrl = inputFileUrl;
+        emit inputFileUrlChanged(inputFileUrl);
+    }
+
+
+    void setLineGraphDataSource(LineGraphDataSource* lineGraphDataSource)
+    {
+        if (m_lineGraphDataSource == lineGraphDataSource)
+            return;
+
+        m_lineGraphDataSource = lineGraphDataSource;
+        emit lineGraphDataSourceChanged(lineGraphDataSource);
+    }
+
+    void setAreaMin(double areaMin)
+    {
+        if (m_areaMin == areaMin)
+            return;
+
+        m_areaMin = areaMin;
+        emit areaMinChanged(areaMin);
+    }
+
+    void setAreaMax(double areaMax)
+    {
+        if (m_areaMax == areaMax)
+            return;
+
+        m_areaMax = areaMax;
+        emit areaMaxChanged(areaMax);
+    }
+
 signals:
     void nextStepChanged(bool nextStep);
     void frameMinChanged(int frameMin);
@@ -265,6 +336,14 @@ signals:
     void isPlotSpheresChanged(bool isPlotSpheres);
 
     void isPlotTrianglesChanged(bool isPlotTriangles);
+
+    void inputFileUrlChanged(QUrl inputFileUrl);
+
+    void lineGraphDataSourceChanged(LineGraphDataSource* lineGraphDataSource);
+
+    void areaMinChanged(double areaMin);
+
+    void areaMaxChanged(double areaMax);
 
 protected:
     virtual SimulatorWorker *createWorker() override;
