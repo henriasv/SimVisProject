@@ -10,18 +10,25 @@ AnalysisStep::AnalysisStep(LammpsIO & reader, int timestep, double xfac, double 
     std::vector<Point> points;
     std::vector<double> myVertices = contractedBox(frame, xfac, yfac, zfac);
     std::vector<double> myVerticesViz = myVertices;
-    myVerticesViz[0] += 3;
-    myVerticesViz[1] -= 3;
-    myVerticesViz[2] += 3;
-    myVerticesViz[3] -= 3;
-    myVerticesViz[4] += 3;
-    myVerticesViz[5] -= 3;
+    double periodicGhostWidth = 3.0; // Region of ghost particles to mimic periodic triangulation.
+    myVerticesViz[0] += periodicGhostWidth;
+    myVerticesViz[1] -= periodicGhostWidth;
+    myVerticesViz[2] += periodicGhostWidth;
+    myVerticesViz[3] -= periodicGhostWidth;
+    myVerticesViz[4] += periodicGhostWidth;
+    myVerticesViz[5] -= periodicGhostWidth;
 
     for (auto position : positions)
     {
         Point myPoint(position.x(), position.y(), position.z());
         if (inBox(myPoint, myVertices))
+        {
             points.push_back(myPoint);
+            if (!inBox(myPoint, myVerticesViz))
+            {
+                // Add periodic copy
+            }
+        }
     }
 
     Alpha_shape_3 as(points.begin(), points.end(), 30.0);

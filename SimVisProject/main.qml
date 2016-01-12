@@ -110,9 +110,9 @@ Window {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         value: 19000
-        minimumValue: 19000 //simulator.frameMin
-        maximumValue: 22000 //simulator.frameMax
-        stepSize: 100
+        minimumValue: 160500 //simulator.frameMin
+        maximumValue: 230100 //simulator.frameMax
+        stepSize: 300
         onValueChanged: {
             simulator.newStep = value
             simulator.nextStep = true

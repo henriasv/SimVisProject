@@ -2,10 +2,12 @@
 #include <SimVis/TriangleCollection>
 #include <SimVis/Spheres>
 #include <QDebug>
+#include <QtTest/QTest>
 #include <vector>
 #include <QVector3D>
 #include <QObject>
 #include <list>
+#include <unistd.h>
 
 
 MySimulator::MySimulator()
@@ -113,10 +115,12 @@ void MyWorker::work()
     {
         //qDebug() << QString("LammpsIO not initialized");
         //qDebug() << QString(m_inputfileurl.toLocalFile());
+        usleep(100000);
         if (!m_inputfileurl.isEmpty())
         {
             qDebug() << QString("Reading input file from valid url");
             lammpsIO = new LammpsIO(m_inputfileurl.toLocalFile().toStdString());
+            //lammpsIO = new LammpsIO("/media/henrik/IcyBox/master_methane_hydrates/cracks/systematic_cracks_ellipsehole_thick_280K/lmp_Nerate=5e4_temperature=280.0_Nproduction=4e5_timeStep=1.0_crackWidth=6.0_Nx=24_Ny=24_Nz=12_maxStrain=1.048_crackLength=40.0_seed=000/trajectory.lammpstrj");
             std::vector<int> frames = lammpsIO->availableFrames();
             m_framemin = *std::min_element(frames.begin(), frames.end());
             m_framemax = *std::max_element(frames.begin(), frames.end());

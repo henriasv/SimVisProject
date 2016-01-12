@@ -14,7 +14,8 @@ SOURCES += main.cpp \
     analysisstep.cpp \
     figure.cpp \
     graph.cpp \
-    linegraph.cpp
+    linegraph.cpp \
+    ghostbox.cpp
 
 RESOURCES += qml.qrc
 
@@ -34,7 +35,8 @@ HEADERS += \
     analysisstep.h \
     figure.h \
     graph.h \
-    linegraph.h
+    linegraph.h \
+    ghostbox.h
 
 unix|win32: LIBS += -lCGAL -lgmp
 unix|win32: INCLUDEPATH += /usr/local/Cellar/cgal/4.6.3/include /usr/local/Cellar/boost/1.58.0/include /usr/local/Cellar/gmp/6.0.0a/include /usr/local/Cellar/mpfr/3.1.3/include
