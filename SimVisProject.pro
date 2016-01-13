@@ -1,6 +1,7 @@
 TEMPLATE = subdirs
-SUBDIRS = SimVis SimVisProject
+SUBDIRS = SimVis SimVisProject \
+    SimVisProjectUnitTests
 CONFIG += ordered
 SimVisProject.depends = SimVis
-SimVisProjectTest.depends = SimVisProject
+SimVisProjectUnitTests.depends = SimVisProject
 

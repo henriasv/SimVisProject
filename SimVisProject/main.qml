@@ -110,15 +110,35 @@ Window {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         value: 19000
-        minimumValue: 160500 //simulator.frameMin
-        maximumValue: 230100 //simulator.frameMax
-        stepSize: 300
+        minimumValue: sliderMin.text.toString() //simulator.frameMin
+        maximumValue: sliderMax.text.toString() //simulator.frameMax
+        stepSize: sliderStep.text.toString()
         onValueChanged: {
             simulator.newStep = value
             simulator.nextStep = true
         }
         objectName: "slider"
         updateValueWhileDragging: true
+
+        TextField {
+            id: sliderMin
+            text: "0"
+            anchors.left: parent.left
+            anchors.bottom: parent.top
+        }
+
+        TextField {
+            id: sliderMax
+            text: "120000"
+            anchors.right: parent.right
+            anchors.bottom: parent.top
+        }
+        TextField {
+            id: sliderStep
+            text: "300"
+            anchors.bottom: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
     }
 
 
@@ -126,13 +146,14 @@ Window {
     Button {
         id: timestepButton
         anchors.left: parent.left
-        text: timeSlider.value
+        anchors.horizontalCenter: parent.horizontalCenter
+        text: "Timestep " + timeSlider.value
     }
 
     Slider {
         id: xfacField
         anchors.top: timestepButton.bottom
-        value: 0.3
+        value: 1.0
         stepSize: 0.1
         onValueChanged: {
             simulator.xfac = value
@@ -145,7 +166,7 @@ Window {
     Slider {
         id: yfacField
         anchors.top: xfacField.bottom
-        value: 0.3
+        value: 1.0
         stepSize: 0.1
         onValueChanged: {
             simulator.yfac = value
@@ -158,7 +179,7 @@ Window {
     Slider {
         id: zfacField
         anchors.top: yfacField.bottom
-        value: 0.3
+        value: 1.0
         stepSize: 0.1
         onValueChanged: {
             simulator.zfac = value
@@ -213,23 +234,36 @@ Window {
         id: figure
         width: 300
         height: 300
+        anchors.right: parent.right
         //color: "red"
         xMin: timeSlider.minimumValue
         xMax: timeSlider.maximumValue
-        yMin: simulator.areaMin
-        yMax: simulator.areaMax
+        yMin: ymin.text.toString()
+        yMax: ymax.text.toString()
         xLabel: "timestep "
         yLabel: "area"
         title: "Surface area"
         LineGraph {
             id: graph
             dataSource: simulator.lineGraphDataSource
-            width: 1
+            width: 2
             style: Qt.DotLine
         }
         MouseArea {
             anchors.fill: parent
             drag.target: parent
+        }
+        TextField {
+            id: ymin
+            text: "0"
+            anchors.left: parent.left
+            anchors.top: parent.bottom
+        }
+        TextField {
+            id: ymax
+            text: "10000"
+            anchors.left: parent.left
+            anchors.bottom: parent.top
         }
     }
 }

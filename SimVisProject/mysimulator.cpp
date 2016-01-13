@@ -58,7 +58,7 @@ void MyWorker::synchronizeSimulator(Simulator *simulator)
 
         mySimulator->lineGraphDataSource()->clear();
         mySimulator->setAreaMin(0.0);
-        mySimulator->setAreaMax(200000.0);
+        mySimulator->setAreaMax(8000.0);
         for (auto & step : stepData)
         {
             mySimulator->lineGraphDataSource()->addPoint(static_cast<double>(step.first), step.second.surfaceArea());
@@ -70,7 +70,7 @@ void MyWorker::synchronizeSimulator(Simulator *simulator)
 void MyWorker::synchronizeRenderer(Renderable *renderableObject)
 {
     TriangleCollection* triangleCollection = qobject_cast<TriangleCollection*>(renderableObject);
-    QVector3D displacement(140, 140, 75);
+    QVector3D displacement(140, 140, 10);
     if(triangleCollection && m_hasvertices) {
         triangleCollection->data.resize(vertices.size());
         triangleCollection->dirty = true;
@@ -132,6 +132,7 @@ void MyWorker::work()
     {
         if (m_ispreload)
         {
+            stepData.clear();
             for (int i = m_framemin; i<= m_framemax; i+=m_framestep)
             {
                 readStep(i);
@@ -166,10 +167,13 @@ void MyWorker::readStep(int timestep)
                 vertices.push_back(triangle.vertices[1]);
                 vertices.push_back(triangle.vertices[2]);
             }
+            qDebug() << QString("Surface Area ") << stepData[timestep].surfaceArea();
         }
         else
         {
-            AnalysisStep currentStep(*lammpsIO, timestep, m_xfac, m_yfac, m_zfac, 'O');
+            AnalysisStep currentStep(*lammpsIO, timestep, m_xfac, m_yfac, m_zfac, 'O'); // Heavy computations. Most time is spent here
+            if (currentStep.isValid())
+            {
             stepData[timestep] = currentStep;
             for (Triangle & triangle : stepData[timestep].triangleData)
             {
@@ -177,19 +181,15 @@ void MyWorker::readStep(int timestep)
                 vertices.push_back(triangle.vertices[1]);
                 vertices.push_back(triangle.vertices[2]);
             }
+            }
         }
         m_hasvertices = true;
-        double surfaceArea = stepData[timestep].surfaceArea();
-        qDebug() << QString("Surface Area ") << surfaceArea;
-        //std::cout << std::setprecision(6) <<  surfaceArea << std::endl;
-
     }
     m_nextstep = false;
 }
 
-MyWorker::MyWorker() {
-    //std::string  filepath("/Users/henriksveinsson/molecular-simulations/lmp_Nthermalize=10000.0_Nerate=10000.0_temperature=260.0_crackRadius=20.0_Nproduction=40000.0_timeStep=10.0_Nx=24_Ny=24_Nz=12_crackHeight=6.0_maxStrain=1.1_seed=000/trajectory.lammpstrj");
-    m_nextstep = false;
+MyWorker::MyWorker()
+{
 }
 
 

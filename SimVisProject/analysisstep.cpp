@@ -1,37 +1,37 @@
 #include "analysisstep.h"
-
+#include "ghostbox.h"
 
 AnalysisStep::AnalysisStep(LammpsIO & reader, int timestep, double xfac, double yfac, double zfac, char element)
 {
     LammpsFrame frame;
-    reader.readFrame(frame, timestep);
+    m_isValid = reader.readFrame(frame, timestep);
     std::vector<vec3> positions = frame.getPositionsType(reader.elementCharToType(element));
 
-    std::vector<Point> points;
+
     std::vector<double> myVertices = contractedBox(frame, xfac, yfac, zfac);
     std::vector<double> myVerticesViz = myVertices;
-    double periodicGhostWidth = 3.0; // Region of ghost particles to mimic periodic triangulation.
-    myVerticesViz[0] += periodicGhostWidth;
-    myVerticesViz[1] -= periodicGhostWidth;
-    myVerticesViz[2] += periodicGhostWidth;
-    myVerticesViz[3] -= periodicGhostWidth;
-    myVerticesViz[4] += periodicGhostWidth;
-    myVerticesViz[5] -= periodicGhostWidth;
+    double periodicGhostWidth = 6.0; // Region of ghost particles to mimic periodic triangulation.
+    myVerticesViz[0] -= periodicGhostWidth;
+    myVerticesViz[1] += periodicGhostWidth;
+    myVerticesViz[2] -= periodicGhostWidth;
+    myVerticesViz[3] += periodicGhostWidth;
+    myVerticesViz[4] -= periodicGhostWidth;
+    myVerticesViz[5] += periodicGhostWidth;
 
-    for (auto position : positions)
+    GhostBox myGhostBox(myVerticesViz[0], myVerticesViz[1], myVerticesViz[2], myVerticesViz[3], myVerticesViz[4], myVerticesViz[5], frame.xlo, frame.xhi, frame.ylo, frame.yhi, frame.zlo, frame.zhi);
+    for (auto & position : positions)
     {
-        Point myPoint(position.x(), position.y(), position.z());
-        if (inBox(myPoint, myVertices))
-        {
-            points.push_back(myPoint);
-            if (!inBox(myPoint, myVerticesViz))
-            {
-                // Add periodic copy
-            }
-        }
+        myGhostBox.addParticle(QVector3D(position.x(), position.y(), position.z()));
     }
 
-    Alpha_shape_3 as(points.begin(), points.end(), 30.0);
+    std::vector<Point> points;
+    for (auto & position : myGhostBox.m_particles)
+    {
+        Point myPoint(position.x(), position.y(), position.z());
+        points.push_back(myPoint);
+    }
+
+    Alpha_shape_3 as(points.begin(), points.end(), 25.0);
     std::cout << "Alpha shape completed." << std::endl;
 
     std::vector<Alpha_shape_3::Facet> facets;
@@ -44,19 +44,19 @@ AnalysisStep::AnalysisStep(LammpsIO & reader, int timestep, double xfac, double 
       auto myCell = *std::get<0>(myFacet);
       int facetInd = std::get<1>(myFacet);
 
-      bool isPlot = true;
+      int isPlot = 0;
 
-      for (int i = 0; i<4; i++)
-      {
-          auto myVertex = *myCell.vertex(i);
-          Point myPoint = myVertex.point();
-          if (!inBox(myPoint, myVerticesViz))
-          {
-              isPlot = false;
-          }
-      }
+//      for (int i = 0; i<4; i++)
+//      {
+//          auto myVertex = *myCell.vertex(i);
+//          Point myPoint = myVertex.point();
+//          if (inBox(myPoint, myVertices))
+//          {
+//              isPlot ++;
+//          }
+//      }
 
-      if (isPlot)
+      if (true)
       {
           Triangle triangle;
           for (int i = 0; i<4; i++)
@@ -65,23 +65,31 @@ AnalysisStep::AnalysisStep(LammpsIO & reader, int timestep, double xfac, double 
               {
                 auto myVertex = *myCell.vertex(i);
                 Point myPoint = myVertex.point();
+                if (inBox(myPoint, myVertices))
+                {
+                    isPlot ++;
+                }
                 triangle.addVertex(QVector3D(myPoint.x(), myPoint.y(), myPoint.z()));
               }
           }
-          if (triangle.valid())
+          if (isPlot >= 2)
           {
-            this->addTriangle(triangle);
+              if (triangle.valid())
+              {
+                  this->addTriangle(triangle);
+              }
+              else
+              {
+                  qDebug() << QString("Invalid triangle was not inserted");
+              }
           }
-          else
-          {
-              qDebug() << QString("Invalid triangle was not inserted");
-          }
+
       }
     }
     this->setBoundingBox(QVector3D(frame.xlo, frame.ylo, frame.zlo),
                               QVector3D(frame.xhi, frame.yhi, frame.zhi));
-    this->setAnalysisBox(QVector3D(myVertices[0], myVertices[2], myVertices[4]),
-                              QVector3D(myVertices[1], myVertices[3], myVertices[5]));
+    this->setAnalysisBox(QVector3D(myVerticesViz[0], myVerticesViz[2], myVerticesViz[4]),
+                              QVector3D(myVerticesViz[1], myVerticesViz[3], myVerticesViz[5]));
 }
 
 void AnalysisStep::addTriangle(Triangle triangle)
@@ -116,6 +124,11 @@ double AnalysisStep::surfaceArea()
         }
     }
     return area;
+}
+
+bool AnalysisStep::isValid()
+{
+    return m_isValid;
 }
 
 bool AnalysisStep::inBox(const Point & inPoint, const std::vector<double> & vertices)

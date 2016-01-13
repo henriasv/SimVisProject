@@ -7,6 +7,7 @@
 QT       += quick testlib
 
 QT       -= gui
+CONFIG += c++11
 
 TARGET = tst_simvisprojectunittests
 CONFIG   += console
@@ -15,5 +16,7 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 
-SOURCES += tst_simvisprojectunittests.cpp
+SOURCES += tst_simvisprojectunittests.cpp \
+           ../SimVisProject/ghostbox.cpp
+
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
