@@ -39,6 +39,12 @@ void MyWorker::synchronizeSimulator(Simulator *simulator)
 {
     MySimulator *mySimulator = qobject_cast<MySimulator*>(simulator);
     if(mySimulator) {
+        if (m_issetframerange)
+        {
+            mySimulator->setFrameMin(m_framemin);
+            mySimulator->setFrameMax(m_framemax);
+            m_issetframerange = false;
+        }
         m_nextstep = mySimulator->nextStep();
         m_newstep = mySimulator->newStep();
         m_framestep = mySimulator->frameStep();
@@ -70,7 +76,7 @@ void MyWorker::synchronizeSimulator(Simulator *simulator)
 void MyWorker::synchronizeRenderer(Renderable *renderableObject)
 {
     TriangleCollection* triangleCollection = qobject_cast<TriangleCollection*>(renderableObject);
-    QVector3D displacement(140, 140, 10);
+    QVector3D displacement(72, 72, 72);
     if(triangleCollection && m_hasvertices) {
         triangleCollection->data.resize(vertices.size());
         triangleCollection->dirty = true;
@@ -124,6 +130,7 @@ void MyWorker::work()
             std::vector<int> frames = lammpsIO->availableFrames();
             m_framemin = *std::min_element(frames.begin(), frames.end());
             m_framemax = *std::max_element(frames.begin(), frames.end());
+            m_issetframerange = true;
         }
     }
 

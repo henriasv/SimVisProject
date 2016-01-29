@@ -34,6 +34,7 @@ private:
     int m_newstep = 0;
     int m_framemin = 0;
     int m_framemax = 0;
+    bool m_issetframerange = false;
     double m_skewfactor = 0;
     double m_rsq_threshold = 0;
     bool m_isplottriangles = true;

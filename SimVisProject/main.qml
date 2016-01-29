@@ -122,14 +122,14 @@ Window {
 
         TextField {
             id: sliderMin
-            text: "0"
+            text: simulator.frameMin
             anchors.left: parent.left
             anchors.bottom: parent.top
         }
 
         TextField {
             id: sliderMax
-            text: "120000"
+            text: simulator.frameMax
             anchors.right: parent.right
             anchors.bottom: parent.top
         }
